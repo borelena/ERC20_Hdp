@@ -14,7 +14,6 @@ contract HedpayCrowdsale is Contactable {
   uint8 public constant firstPhaseBonus = 30;
   uint8[3] public secondPhaseBonus = [10, 15, 20];
   uint8 public constant thirdPhaseBonus = 5;
-  uint public constant totalSupply = 10000000000000;
   uint public constant firstStageStartTime = 1539118254; //09.10.2018 20:50:54 GMT
   uint public constant firstStageEndTime = 1540943999; //30.11.2018 23:59:59 GMT
   uint public constant secondStageStartTime = 1540944000; //31.10.2018 00:00:00 GMT
@@ -68,17 +67,10 @@ contract HedpayCrowdsale is Contactable {
     require(address(_token) != address(0));
     token = _token;
     creationTime = block.timestamp;
-    saleAmount = uint(token.totalSupply()).div(100).mul(salePercent).mul(
-      10 ** uint(token.decimals()));
-    bonusAmount = uint(token.totalSupply()).div(100).mul(bonusPercent).mul(
-      10 ** uint(token.decimals())
-    );
-    teamAmount = uint(token.totalSupply()).div(100).mul(teamPercent).mul(
-      10 ** uint(token.decimals())
-    );
-    preSaleAmount = uint(token.totalSupply()).div(100).mul(preSalePercent).mul(
-      10 ** uint(token.decimals())
-    );
+    saleAmount = uint(token.totalSupply()).div(100).mul(salePercent);
+    bonusAmount = uint(token.totalSupply()).div(100).mul(bonusPercent);
+    teamAmount = uint(token.totalSupply()).div(100).mul(teamPercent);
+    preSaleAmount = uint(token.totalSupply()).div(100).mul(preSalePercent);
   }
 
   /**
