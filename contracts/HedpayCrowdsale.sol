@@ -25,6 +25,7 @@ contract HedpayCrowdsale is Contactable {
   uint public constant goal = 25000 ether;
   uint public constant rate = 100;
   uint public constant minimumWeiAmount = 100 finney;
+  uint public constant thirdStageMinWeiAmount = 10 ether;
   uint public constant salePercent = 14;
   uint public constant bonusPercent = 1;
   uint public constant teamPercent = 2;
@@ -196,21 +197,20 @@ contract HedpayCrowdsale is Contactable {
    * @param _beneficiary Address performing the token purchase
    */
   function buyTokens(address _beneficiary) public payable {
-    require(_beneficiary != address(0));
-    require(msg.value > 0 && msg.value <= limitBuyAmount);
-    require(hasStarted() && !hasEnded());
-    require(weiRaised.add(msg.value) <= cap);
-    require(getTokenAmountBonus(msg.value) <= saleAmount);
-
-    weiRaised = weiRaised.add(msg.value);
-    saleAmount = saleAmount.sub(getTokenAmountBonus(msg.value));
-    token.safeTransferFrom(
+	 require(_beneficiary != address(0));
+     require(hasStarted() && !hasEnded());
+     require(getTokenAmountBonus(msg.value) <= saleAmount); 
+     require (msg.value <= limitBuyAmount);
+	 require(_preValidateMinimumAmount(msg.value));
+     weiRaised = weiRaised.add(msg.value);
+     saleAmount = saleAmount.sub(getTokenAmountBonus(msg.value));
+     token.safeTransferFrom(
       owner,
       _beneficiary,
       getTokenAmountBonus(msg.value)
     );
 
-    emit TokenPurchase(
+     emit TokenPurchase(
       msg.sender,
       _beneficiary,
       msg.value,
@@ -251,7 +251,6 @@ contract HedpayCrowdsale is Contactable {
     require(_value <= token.balanceOf(_owner));
     require(bonusAmount > 0);
     require(_value <= bonusAmount);
-
     bonuses[_owner] = _value;
     if (preSale) {
       preSaleAmount = preSaleAmount.sub(_value);
@@ -311,9 +310,26 @@ contract HedpayCrowdsale is Contactable {
   function _preValidateRefill(address _to, uint _weiAmount)
     internal view returns (bool) {
     return(
-      hasStarted() && _weiAmount > 0 &&  weiRaised.add(_weiAmount) <= cap
-      && _to != address(0) && _weiAmount >= minimumWeiAmount &&
-      getTokenAmount(_weiAmount) <= saleAmount
+      hasStarted() && _to != address(0) && _preValidateMinimumAmount(_weiAmount)
     );
   }
-}
+  
+  /**
+   * @dev Internal function to check minimumWeiAmount depending on the date
+   * @param _weiAmount uint amount of the tokens to be transferred
+   * @return bool `true` if it's OK with value of tokens
+   */
+  function _preValidateMinimumAmount(uint _weiAmount)
+   internal view returns (bool) {
+	   if (block.timestamp >= firstStageStartTime && block.timestamp <= secondStageEndTime 
+	   && _weiAmount >= minimumWeiAmount) {
+          getTokenAmount(_weiAmount) <= saleAmount;
+		} else if (block.timestamp >= thirdStageStartTime && !hasEnded() 
+			&& _weiAmount >= thirdStageMinWeiAmount) {
+          getTokenAmount(_weiAmount) <= saleAmount;
+		} else
+			return false;
+	 }
+	 
+ }
+   
