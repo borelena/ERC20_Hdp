@@ -233,7 +233,7 @@ contract HedpayToken is  IERC20, Contactable {
         name = "HEdpAY";
         symbol = "Hdp.ф";
         decimals = 4;
-        _totalSupply = 10000000000000;
+        _totalSupply = 10000000000000; //1 billion * 10000 (decimals)
         balances[owner] = _totalSupply;
     }
 
