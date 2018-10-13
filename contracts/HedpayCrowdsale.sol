@@ -178,7 +178,7 @@ contract Contactable is Ownable {
  * @dev Abstract token ERC20 declaration
  */
 contract ERC20Token is IERC20, Contactable {
-   
+  
   uint8 public decimals;
   
   function totalSupply() external view returns (uint256);
@@ -217,6 +217,7 @@ contract ERC20Token is IERC20, Contactable {
  */
 contract HedpayCrowdsale is IERC20, Contactable {
   using SafeMath for uint;
+  using SafeERC20 for ERC20Token;
 
   ERC20Token public token;
 
@@ -323,7 +324,7 @@ contract HedpayCrowdsale is IERC20, Contactable {
    * @return uint tokens amount
    */
   function getTokenAmount(uint _weiAmount) public view returns (uint) {
-    return _weiAmount.mul(rate).div((18 - uint(token.decimals())) ** 10);
+    return _weiAmount.mul(rate).div(18 - uint(token.decimals()) ** 10);
   }
 
   /**
