@@ -215,7 +215,7 @@ contract ERC20Token is IERC20, Contactable {
 /**
  * @title HedpayCrowdsale contract
  */
-contract HedpayCrowdsale is  Contactable {
+contract HedpayCrowdsale is Contactable {
   using SafeMath for uint;
   using SafeERC20 for ERC20Token;
 
@@ -252,7 +252,7 @@ contract HedpayCrowdsale is  Contactable {
 
   address public teamAddress = 0x7d4E738477B6e8BaF03c4CB4944446dA690f76B5;
 
-  mapping (address => uint) internal bonuses;
+  mapping (address => uint) public bonuses;
 
  /**
   * @dev Event for token purchase logging
@@ -324,7 +324,7 @@ contract HedpayCrowdsale is  Contactable {
    * @return uint tokens amount
    */
   function getTokenAmount(uint _weiAmount) public view returns (uint) {
-    return _weiAmount.mul(rate).div(18 - uint(token.decimals()) ** 10);
+    return _weiAmount.mul(rate).mul( 10**uint(token.decimals()) );
   }
 
   /**
@@ -335,7 +335,7 @@ contract HedpayCrowdsale is  Contactable {
    */
   function getTokenAmountBonus(uint _weiAmount)
     public view returns (uint) {
-    if (block.timestamp >= firstStageStartTime && block.timestamp <= firstStageEndTime) {
+    if (now >= firstStageStartTime && now <= firstStageEndTime) {
       return(
         getTokenAmount(_weiAmount).
         add(
@@ -344,7 +344,7 @@ contract HedpayCrowdsale is  Contactable {
           mul(uint(firstPhaseBonus))
         )
       );
-    } else if (block.timestamp >= secondStageStartTime && block.timestamp <= secondStageEndTime) {
+    } else if (now >= secondStageStartTime && now <= secondStageEndTime) {
       if (_weiAmount > 0 && _weiAmount < 2500 finney) {
         return(
           getTokenAmount(_weiAmount).
@@ -403,7 +403,7 @@ contract HedpayCrowdsale is  Contactable {
      require(hasStarted() && !hasEnded());
      require(getTokenAmountBonus(msg.value) <= saleAmount); 
      require (msg.value <= limitBuyAmount);
-	 require(_preValidateMinimumAmount(msg.value));
+	 //require(preValidateMinimumAmount(msg.value));
      weiRaised = weiRaised.add(msg.value);
      saleAmount = saleAmount.sub(getTokenAmountBonus(msg.value));
      token.safeTransferFrom(
@@ -448,7 +448,7 @@ contract HedpayCrowdsale is  Contactable {
    * @param _value uint bonus tokens amount
    */
   function setBonus(address _owner, uint _value, bool preSale)
-    public onlyOwner {
+    public onlyOwner  {
     require(_owner != address(0));
     require(_value <= token.balanceOf(_owner));
     require(bonusAmount > 0);
@@ -470,7 +470,7 @@ contract HedpayCrowdsale is  Contactable {
    * @param _weiAmount uint amount of the tokens to be transferred
    */
   function refill(address _to, uint _weiAmount) public onlyOwner {
-    require(_preValidateRefill(_to, _weiAmount));
+    require(preValidateRefill(_to, _weiAmount));
     setBonus(
       _to,
       getTokenAmountBonus(_weiAmount).sub(
@@ -509,10 +509,10 @@ contract HedpayCrowdsale is  Contactable {
    * @param _weiAmount uint amount of the tokens to be transferred
    * @return bool `true` if the refill can be executed
    */
-  function _preValidateRefill(address _to, uint _weiAmount)
-    internal view returns (bool) {
+  function preValidateRefill(address _to, uint _weiAmount)
+    public view returns (bool) {
     return(
-      hasStarted() && _to != address(0) && _preValidateMinimumAmount(_weiAmount)
+      hasStarted() && _to != address(0) && preValidateMinimumAmount(_weiAmount)
     );
   }
   
@@ -521,17 +521,16 @@ contract HedpayCrowdsale is  Contactable {
    * @param _weiAmount uint amount of the tokens to be transferred
    * @return bool `true` if it's OK with value of tokens
    */
-  function _preValidateMinimumAmount(uint _weiAmount)
-   internal view returns (bool) {
-	   if (block.timestamp >= firstStageStartTime && block.timestamp <= secondStageEndTime 
-	   && _weiAmount >= minimumWeiAmount) {
-          getTokenAmount(_weiAmount) <= saleAmount;
-		} else if (block.timestamp >= thirdStageStartTime && !hasEnded() 
-			&& _weiAmount >= thirdStageMinWeiAmount) {
-          getTokenAmount(_weiAmount) <= saleAmount;
+  function preValidateMinimumAmount(uint _weiAmount)
+   public view returns (bool) {
+	   if (now >= firstStageStartTime && now <= secondStageEndTime) {
+          return (getTokenAmount(_weiAmount).mul(10**14) >= minimumWeiAmount &&
+                  getTokenAmount(_weiAmount).mul(10**14) <= saleAmount.mul(10**14));
+		} else if (now >= thirdStageStartTime && !hasEnded() ) {
+		  return  (getTokenAmount(_weiAmount) >= thirdStageMinWeiAmount.mul(10**uint(token.decimals())) &&
+                   getTokenAmount(_weiAmount) <= saleAmount.mul(10**14));
 		} else
-			return false;
+		   return false;
 	 }
 	 
  }
-   
