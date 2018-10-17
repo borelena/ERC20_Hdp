@@ -215,7 +215,7 @@ contract ERC20Token is IERC20, Contactable {
 /**
  * @title HedpayCrowdsale contract
  */
-contract HedpayCrowdsale is IERC20, Contactable {
+contract HedpayCrowdsale is  Contactable {
   using SafeMath for uint;
   using SafeERC20 for ERC20Token;
 
